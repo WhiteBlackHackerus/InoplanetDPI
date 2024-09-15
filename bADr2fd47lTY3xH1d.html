@@ -1,0 +1,448 @@
+<html><head><base href=""><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>InoplanetProbiv - Поиск информации</title>
+<style>
+    body, html {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        background-color: #f4f4f4;
+    }
+    .container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #fff;
+        border-radius: 5px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    h1, h2 {
+        color: #2c3e50;
+    }
+    input[type="text"], input[type="email"], input[type="password"], select {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+    button {
+        background-color: #3498db;
+        color: #fff;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    button:hover {
+        background-color: #2980b9;
+    }
+    button:disabled {
+        background-color: #bdc3c7;
+        cursor: not-allowed;
+    }
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0,0,0,0.4);
+    }
+    .modal-content {
+        background-color: #fefefe;
+        margin: 15% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%;
+        max-width: 500px;
+        border-radius: 5px;
+    }
+    .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    .close:hover {
+        color: #000;
+    }
+    #userMenu {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+    }
+    #avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        cursor: pointer;
+    }
+    #menu {
+        display: none;
+        position: absolute;
+        right: 0;
+        background-color: #fff;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 10px;
+    }
+    .menu-item {
+        cursor: pointer;
+        padding: 5px;
+    }
+    .menu-item:hover {
+        background-color: #f0f0f0;
+    }
+    .subscription-option {
+        margin-bottom: 10px;
+    }
+    #remainingSearches {
+        margin-top: 10px;
+        font-weight: bold;
+    }
+</style>
+</head>
+<body>
+    <div id="userMenu">
+        <img id="avatar" src="default_avatar.png" alt="User Avatar">
+        <div id="menu">
+            <div class="menu-item" onclick="showSettings()">Настройки</div>
+            <div class="menu-item" onclick="showSubscription()">Купить подписку</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1>InoplanetProbiv - Поиск информации</h1>
+        <div id="searchForm" style="display: none;">
+            <select id="searchType">
+                <option value="fio">ФИО</option>
+                <option value="phone">Номер телефона</option>
+                <option value="email">Email</option>
+                <option value="social">Соц. Сети</option>
+            </select>
+            <input type="text" id="searchInput" placeholder="Введите данные для поиска" required>
+            <select id="resultCount">
+                <option value="1">1 результат</option>
+                <option value="5">5 результатов</option>
+                <option value="10" disabled>10 результатов</option>
+                <option value="15" disabled>15 результатов</option>
+                <option value="20" disabled>20 результатов</option>
+            </select>
+            <button onclick="performSearch()">Поиск</button>
+            <div id="remainingSearches"></div>
+        </div>
+        <div id="results"></div>
+    </div>
+
+    <div id="authModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('authModal')">&times;</span>
+            <h2>Авторизация / Регистрация</h2>
+            <div id="loginForm">
+                <input type="email" id="loginEmail" placeholder="Email" required>
+                <input type="password" id="loginPassword" placeholder="Пароль" required>
+                <button onclick="login()">Войти</button>
+            </div>
+            <p>Нет аккаунта? <a href="#" onclick="showRegisterForm()">Зарегистрироваться</a></p>
+        </div>
+    </div>
+
+    <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('registerModal')">&times;</span>
+            <h2>Регистрация</h2>
+            <input type="text" id="registerName" placeholder="Имя" required>
+            <input type="email" id="registerEmail" placeholder="Email" required>
+            <input type="password" id="registerPassword" placeholder="Пароль" required>
+            <input type="password" id="confirmPassword" placeholder="Подтвердите пароль" required>
+            <div>
+                <p>Выберите аватар:</p>
+                <div id="avatarOptions"></div>
+                <input type="file" id="customAvatar" accept="image/*">
+            </div>
+            <label>
+                <input type="checkbox" id="rememberMe"> Запомнить меня
+            </label>
+            <button onclick="register()">Зарегистрироваться</button>
+        </div>
+    </div>
+
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('settingsModal')">&times;</span>
+            <h2>Настройки</h2>
+            <input type="text" id="settingsName" placeholder="Имя">
+            <input type="email" id="settingsEmail" placeholder="Email">
+            <input type="password" id="settingsPassword" placeholder="Новый пароль">
+            <div>
+                <p>Изменить аватар:</p>
+                <div id="settingsAvatarOptions"></div>
+                <input type="file" id="settingsCustomAvatar" accept="image/*">
+            </div>
+            <button onclick="saveSettings()">Сохранить изменения</button>
+        </div>
+    </div>
+
+    <div id="subscriptionModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('subscriptionModal')">&times;</span>
+            <h2>Купить подписку</h2>
+            <div class="subscription-option">
+                <label>
+                    <input type="radio" name="subscription" value="1"> 1 день - 120 рублей
+                </label>
+            </div>
+            <div class="subscription-option">
+                <label>
+                    <input type="radio" name="subscription" value="7"> 7 дней - 170 рублей
+                </label>
+            </div>
+            <div class="subscription-option">
+                <label>
+                    <input type="radio" name="subscription" value="14"> 14 дней - 240 рублей
+                </label>
+            </div>
+            <div class="subscription-option">
+                <label>
+                    <input type="radio" name="subscription" value="30"> 30 дней - 325 рублей
+                </label>
+            </div>
+            <button id="payButton" onclick="showPaymentInfo()" disabled>Оплатить</button>
+        </div>
+    </div>
+
+    <div id="paymentModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('paymentModal')">&times;</span>
+            <h2>Оплата подписки</h2>
+            <p>Чтобы оплатить подписку на <span id="subscriptionDays"></span> дней,</p>
+            <p>Вам нужно написать нам в Telegram данный текст:</p>
+            <p id="paymentCode"></p>
+            <button onclick="copyPaymentCode()">Скопировать код</button>
+            <button onclick="openTelegram()">Написать нам в Telegram</button>
+        </div>
+    </div>
+
+    <script>
+    let currentUser = null;
+    let remainingSearches = 5;
+    const users = JSON.parse(localStorage.getItem('users')) || {};
+
+    function showModal(modalId) {
+        document.getElementById(modalId).style.display = 'block';
+    }
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+    }
+
+    function showRegisterForm() {
+        closeModal('authModal');
+        showModal('registerModal');
+    }
+
+    function login() {
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
+        if (users[email] && users[email].password === password) {
+            currentUser = users[email];
+            closeModal('authModal');
+            updateUI();
+        } else {
+            alert('Неверный email или пароль');
+        }
+    }
+
+    function register() {
+        const name = document.getElementById('registerName').value;
+        const email = document.getElementById('registerEmail').value;
+        const password = document.getElementById('registerPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        const rememberMe = document.getElementById('rememberMe').checked;
+
+        if (password !== confirmPassword) {
+            alert('Пароли не совпадают');
+            return;
+        }
+
+        if (users[email]) {
+            alert('Пользователь с таким email уже существует');
+            return;
+        }
+
+        const avatarInput = document.querySelector('input[name="avatar"]:checked');
+        const avatar = avatarInput ? avatarInput.value : 'default_avatar.png';
+
+        users[email] = { name, email, password, avatar, rememberMe };
+        localStorage.setItem('users', JSON.stringify(users));
+
+        currentUser = users[email];
+        closeModal('registerModal');
+        updateUI();
+    }
+
+    function updateUI() {
+        document.getElementById('searchForm').style.display = 'block';
+        document.getElementById('avatar').src = currentUser.avatar;
+        updateRemainingSearches();
+    }
+
+    function updateRemainingSearches() {
+        document.getElementById('remainingSearches').textContent = `Осталось поисков: ${remainingSearches}`;
+    }
+
+    function performSearch() {
+        if (remainingSearches <= 0) {
+            alert('У вас закончились поиски на сегодня');
+            return;
+        }
+
+        const searchType = document.getElementById('searchType').value;
+        const searchInput = document.getElementById('searchInput').value;
+        const resultCount = parseInt(document.getElementById('resultCount').value);
+
+        // Здесь должна быть логика выполнения поиска
+        const results = []; // Заглушка для результатов поиска
+
+        displayResults(results);
+        remainingSearches--;
+        updateRemainingSearches();
+    }
+
+    function displayResults(results) {
+        const resultsDiv = document.getElementById('results');
+        resultsDiv.innerHTML = '';
+
+        if (results.length === 0) {
+            resultsDiv.innerHTML = '<p>Результаты не найдены</p>';
+            return;
+        }
+
+        results.forEach((result, index) => {
+            const resultItem = document.createElement('div');
+            resultItem.innerHTML = `<p>${index + 1}. ${result}</p>`;
+            resultsDiv.appendChild(resultItem);
+        });
+    }
+
+    function showSettings() {
+        document.getElementById('settingsName').value = currentUser.name;
+        document.getElementById('settingsEmail').value = currentUser.email;
+        showModal('settingsModal');
+    }
+
+    function saveSettings() {
+        const name = document.getElementById('settingsName').value;
+        const email = document.getElementById('settingsEmail').value;
+        const password = document.getElementById('settingsPassword').value;
+
+        currentUser.name = name;
+        if (password) {
+            currentUser.password = password;
+        }
+
+        const avatarInput = document.querySelector('input[name="settingsAvatar"]:checked');
+        if (avatarInput) {
+            currentUser.avatar = avatarInput.value;
+        }
+
+        users[email] = currentUser;
+        localStorage.setItem('users', JSON.stringify(users));
+
+        updateUI();
+        closeModal('settingsModal');
+    }
+
+    function showSubscription() {
+        showModal('subscriptionModal');
+    }
+
+    function showPaymentInfo() {
+        const selectedSubscription = document.querySelector('input[name="subscription"]:checked');
+        if (selectedSubscription) {
+            const days = selectedSubscription.value;
+            document.getElementById('subscriptionDays').textContent = days;
+            document.getElementById('paymentCode').textContent = generatePaymentCode();
+            closeModal('subscriptionModal');
+            showModal('paymentModal');
+        }
+    }
+
+    function generatePaymentCode() {
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        let result = 'InoplanetProbiv_';
+        for (let i = 0; i < 30; i++) {
+            result += characters.charAt(Math.floor(Math.random() * characters.length));
+        }
+        return result;
+    }
+
+    function copyPaymentCode() {
+        const paymentCode = document.getElementById('paymentCode').textContent;
+        navigator.clipboard.writeText(paymentCode).then(() => {
+            alert('Код скопирован в буфер обмена');
+        });
+    }
+
+    function openTelegram() {
+        window.open('https://t.me/hacker_undetected', '_blank');
+    }
+
+    document.getElementById('avatar').addEventListener('click', function() {
+        const menu = document.getElementById('menu');
+        menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+    });
+
+    document.querySelectorAll('input[name="subscription"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            document.getElementById('payButton').disabled = false;
+        });
+    });
+
+    // Инициализация страницы
+    window.onload = function() {
+        const avatarOptions = ['avatar1.png', 'avatar2.png', 'avatar3.png', 'avatar4.png', 'avatar5.png'];
+        const avatarContainer = document.getElementById('avatarOptions');
+        const settingsAvatarContainer = document.getElementById('settingsAvatarOptions');
+
+        avatarOptions.forEach((avatar, index) => {
+            const radioBtn = document.createElement('input');
+            radioBtn.type = 'radio';
+            radioBtn.name = 'avatar';
+            radioBtn.value = avatar;
+            radioBtn.id = `avatar${index}`;
+
+            const label = document.createElement('label');
+            label.htmlFor = `avatar${index}`;
+            const img = document.createElement('img');
+            img.src = avatar;
+            img.width = 50;
+            img.height = 50;
+            label.appendChild(img);
+
+            avatarContainer.appendChild(radioBtn);
+            avatarContainer.appendChild(label);
+
+            // Дублируем для настроек
+            const settingsRadioBtn = radioBtn.cloneNode();
+            settingsRadioBtn.name = 'settingsAvatar';
+            settingsRadioBtn.id = `settingsAvatar${index}`;
+            const settingsLabel = label.cloneNode(true);
+            settingsLabel.htmlFor = `settingsAvatar${index}`;
+
+            settingsAvatarContainer.appendChild(settingsRadioBtn);
+            settingsAvatarContainer.appendChild(settingsLabel);
+        });
+
+        if (!currentUser) {
+            showModal('authModal');
+        } else {
+            updateUI();
+        }
+    };
+    </script>
+</body></html>
